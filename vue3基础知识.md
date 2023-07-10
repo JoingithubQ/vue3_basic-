@@ -151,3 +151,65 @@ console.log(sum.value); // 输出 27
 当`state.num1`或`state.num2`发生变化时，`sum`的值会自动更新。在示例的后续代码中，我们修改了`state.num1`和`state.num2`的值，并打印出了更新后的`sum.value`。
 
 5.watch  监听 响应式数据的变化 被 ref reactive 包裹的数据才可以用watch监听 
+
+```javascript
+// 监听单个数据源
+ watch(message,(newVal,oldVal)=>{
+   console.log(newVal,oldVal);
+ })
+// 监听多个数据源
+ watch([message,message2],(newVal,oldVal)=>{
+  console.log(newVal,oldVal);
+ })
+ 
+ // ref 变成 reactive
+const message3 = reactive({
+  foo:{
+    bar:{
+      name:'小花',
+      age:32
+    }
+  }
+})
+// 深度监听 开启watch的第三个配置 里面加上deep 值为true 或者 将ref 变成reactive(内置好了deep) 
+// 直接监听复杂类型的变化 这样写 发现新值旧值都一样 只需要新值的话可以这样用 还需要旧值的话就要变成具体监听的值点进去比如message3.foo.bar.name
+// watch(message3,(newVal,oldVal)=>{
+//   console.log(newVal,oldVal);
+// },{
+//   // deep:true,//ref 需要 深度监听 reactive 不需要这个deep
+// })
+
+watch(()=>message3.foo.bar.name,(newVal,oldVal)=>{
+  console.log(newVal,oldVal);
+},{
+  // deep:true,//深度监听
+  immediate:true,//默认为false 作用：为true的话一进来就触发一次监听 立即执行一次
+  flush:"pre",//pre: 组件更新之前调用 sync：同步执行  post 组件更新之后执行
+})
+```
+
+6.watchEffect 高级监听
+
+```
+// 默认立即触发 
+const stop = watchEffect((oninvalidate)=>{
+    console.log('message=>>>',message.value);
+    // console.log('message2=>>>',message2.value);
+    // let ipt:HTMLInputElement = document.querySelector('#ipt') as HTMLInputElement;
+    // console.log('dom没渲染拿不到加配置项即可',ipt);
+    // 清除一些副作用 会先执行
+    oninvalidate(()=>{
+        console.log('before');
+    })
+},{
+    flush:'post',
+    onTrigger(e){//此配置可以做一些调试 
+        debugger
+    }
+})
+// 点击停止监听输入值就不会监听了
+const stopwatch = ()=>{
+    stop();
+}
+```
+
